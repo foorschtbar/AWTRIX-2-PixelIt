@@ -62,7 +62,7 @@ if (!empty($_POST['id'])) {
             <div class="mx-auto col-md-5">
                 <div class="card box-shadow">
                     <div class="card-header text-monospace">
-                        <h3>AWETRIX2PixelIt</h3>
+                        <h3>AWTRIX 2 PixelIt</h3>
                     </div>
                     <div class="card-body">
                         <form class="needs-validation">
