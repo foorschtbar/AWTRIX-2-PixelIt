@@ -1,0 +1,33 @@
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    box-shadow: none !important;
+    outline: 0px !important;
+}
+
+.card-body {
+    padding: 1rem 1rem 0 1rem;
+}
+
+#file {
+    display: none;
+}
+
+.upload-area.drag {
+    border-color: #9ecaed;
+    box-shadow: 0 0 10px #9ecaed;
+}
+
+/* .upload-area.pending{
+    border-color: #f3f162;
+    box-shadow: 0 0 10px #f3f162;
+}
+
+.upload-area.success{
+    border-color: #a1ed9e;
+    box-shadow: 0 0 10px #a1ed9e;
+}
+
+.upload-area.failed{
+    border-color: #ed9e9e;
+    box-shadow: 0 0 10px #ed9e9e;
+} */

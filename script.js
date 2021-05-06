@@ -49,7 +49,7 @@ $(document).ready(function () {
                 reqType: "getIcon",
                 ID: id
             };
-            $.post(".", {
+            $.post("ajax.php", {
                 id: id
             }, function (data, status) {
                 //console.log("Data: " + data + "\nType: " + typeof data + "\nLenght: " + data.length + "\nStatus: " + status);
@@ -91,7 +91,118 @@ $(document).ready(function () {
 
 
     });
+
+    // preventing page from redirecting
+    $("html").on("dragover", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $("h1").text("Drag here");
+    });
+
+    $("html").on("drop", function (e) { e.preventDefault(); e.stopPropagation(); });
+
+    // Drag enter
+    $('.upload-area').on('dragenter', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        //$("h3").text("Drop");
+        //console.log("Drag enter");
+        $(this).addClass("drag");
+        hideMsg();
+    });
+
+    // Drag over
+    $('.upload-area').on('dragover', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        //$("h3").text("Drop");
+        //console.log("Drag over");
+        $(this).addClass("drag");
+        hideMsg();
+    });
+
+    // Drag leave 
+    $('.upload-area').on('dragleave', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        //$("h3").text("Drag leave");
+        //console.log("Drag leave");
+        $(this).removeClass("drag");
+        hideMsg();
+    });
+
+    // Drop
+    $('.upload-area').on('drop', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        //$("h3").text("Upload");
+        //console.log("Drop");
+        $(this).removeClass("drag failed success").addClass("pending");
+        showMsg("Uploading and converting...", "info");
+
+        var file = e.originalEvent.dataTransfer.files;
+        var fd = new FormData();
+
+        fd.append('file', file[0]);
+
+        uploadData(fd);
+    });
+
+    // Open file selector on div click
+    $("#uploadfile").click(function (e) {
+        e.preventDefault();
+        $("#file").click();
+    });
+
+    // file selected
+    $("#file").change(function () {
+        var fd = new FormData();
+
+        var files = $('#file')[0].files[0];
+
+        fd.append('file', files);
+
+        uploadData(fd);
+    });
+
+
 });
+
+// Sending AJAX request and upload file
+function uploadData(formdata) {
+
+    $.ajax({
+        url: 'ajax.php',
+        type: 'post',
+        data: formdata,
+        contentType: false,
+        processData: false,
+        dataType: 'json',
+        success: function (response) {
+            $(".upload-area").removeClass("pending drag failed success");
+            if (response.error) {
+                showMsg(response.error, "danger");
+            } else {
+                showMsg("Upload done", "success");
+                $("#result").fadeIn();
+                framesRGB = new Array();
+                framesInt = new Array();
+                framesRGB[0] = convertData(response.rgb565);
+                framesInt[0] = response.rgb565;
+                drawOnCanvas(framesRGB);
+                setOutput(framesInt);
+            }
+
+            //console.log("success");
+        },
+        error: function (response) {
+            $(".upload-area").removeClass("pending drag success").addClass("failed");
+            showMsg("Upload failed", "danger");
+            console.log("failed");
+        }
+    });
+}
 
 var showMsg = function (text, type) {
     var item = $("#msgbox");
@@ -100,6 +211,12 @@ var showMsg = function (text, type) {
     item.show();
     item.addClass("alert-" + type);
     item.html(text);
+}
+
+var hideMsg = function () {
+    var item = $("#msgbox");
+    item.removeClass();
+    item.hide();
 }
 
 var convertData = function (data) {
