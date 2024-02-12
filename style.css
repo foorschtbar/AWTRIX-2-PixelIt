@@ -17,6 +17,30 @@
     box-shadow: 0 0 10px #9ecaed;
 }
 
+#iconlist .icon {
+    float: left;
+    padding: 5px;
+    border: 1px solid #000;
+    border-radius: 5px;
+    background-color: #000;
+    margin: 5px;
+}
+
+#iconlist .icon img {
+    width: 64px;
+    height: 64px;
+}
+
+.icontooltip {
+    display: none;
+    position: absolute;
+    padding: 5px;
+    background-color: #333;
+    color: #fff;
+    border-radius: 5px;
+    z-index: 99999;
+}
+
 /* .upload-area.pending{
     border-color: #f3f162;
     box-shadow: 0 0 10px #f3f162;

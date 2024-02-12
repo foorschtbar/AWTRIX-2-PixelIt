@@ -25,9 +25,15 @@
                             <div class="col">
                                 <div class="input-group">
                                     <input type="text" pattern="[0-9]+" class="form-control text-center"
-                                        placeholder="AWTRIX Icon ID" id="id" required>
-                                    <div class="input-group-append"><button type="submit" id="convert"
+                                        placeholder="Lametric Icon ID" id="id">
+                                    <div class="input-group-append"><button type="button" id="convert"
                                             class="btn btn-outline-primary">Convert</button></div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="input-group">
+                                    <input type="text" class="form-control text-center" placeholder="AWTRIX Name"
+                                        id="searchTerm" required>
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -37,6 +43,8 @@
                             </div>
                         </div>
                         <div id="msgbox" style="display:none"></div>
+
+                        <div id="iconlist" style="display:none"></div>
 
                         <div id="result" style="display:none">
 
@@ -85,10 +93,9 @@
                     </form>
                 </div>
                 <div class="card-footer text-muted">
-                    <a href="https://awtrix.blueforcer.de/icons.html">AWTRIX Icon Database</a> |
+                    <a href="https://developer.lametric.com/icons">Lametric Icon Database</a> |
                     <a href="https://pixelit.bastelbunker.de/PixelCreator">PixelCreator</a> |
                     <a href="https://pixelit.bastelbunker.de/PixelGallery">PixelGallery</a>
-
                 </div>
             </div>
         </div>

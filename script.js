@@ -1,11 +1,27 @@
 $(document).ready(function () {
 
     var animation;
+    var icondb = [];
 
     var empty = new Array();
     for (var i = 0; i < 64; i++) {
         empty[i] = "#000000";
     }
+
+    // Load AWTRIX Icons
+    fetch('awtrix/meta.json')
+        .then(response => response.json())
+        .then(data => {
+            // The 'data' variable now contains the parsed JSON content
+            console.log("Fetched " + data.length + " AWTRIX icons");
+            icondb = data;
+
+            if ($("#searchTerm").val() != "") {
+                searchIconDB();
+            }
+        })
+        .catch(error => console.error('Error loading JSON:', error));
+
 
     $("#copy").click(function (e) {
         e.preventDefault();
@@ -18,6 +34,67 @@ $(document).ready(function () {
         } catch (err) {
             //alert('Unable to copy');
         }
+    });
+
+    var wto;
+    $('#searchTerm').on('keyup', function () {
+        clearTimeout(wto);
+        wto = setTimeout(function () {
+            searchIconDB();
+        }, 200);
+    });
+
+    function searchIconDB() {
+        var searchTerm = $("#searchTerm").val().trim();
+        if (searchTerm.length >= 1) {
+            console.log("Search for " + searchTerm)
+
+            var result = icondb.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+            showMsg("Found " + result.length + " icons", "info");
+
+            var iconlist = $("#iconlist");
+            $("#result").hide();
+            iconlist.empty();
+            iconlist.show();
+            result.forEach((element) => {
+
+                const html = '<div class="icon"><img src="' + "awtrix/" + element.id + '" data-id="' + element.id + '" data-name="' + element.name + '"></img></div>'
+                iconlist.append(html);
+
+            });
+        }
+    }
+
+    $("#iconlist").on("mouseover", ".icon", function (e) {
+        const element = $(this).find("img");
+        var iconlist = $("#iconlist");
+        console.log(element)
+        const text = "ID: " + element.attr('data-id') + "<br /><b>" + element.attr('data-name') + "</b>";
+
+        // Create and position the tooltip
+        const tooltip = $('<div class="icontooltip">' + text + '</div>')
+        tooltip.appendTo("body")
+
+        const position = element.offset();
+        const tooltipHeight = tooltip.outerHeight();
+        const tooltipWidth = tooltip.outerWidth();
+
+        tooltip.css({
+            top: position.top - tooltipHeight - 10,
+            left: position.left + (element.outerWidth() - tooltipWidth) / 2,
+            display: 'block'
+        });
+    });
+
+    $("#iconlist").on("mouseout", ".icon", function (e) {
+        $('.icontooltip').remove();
+    });
+
+    $("#iconlist").on("click", ".icon", function (e) {
+        const element = $(this).find("img");
+        $("#iconlist").hide();
+        convertIcon(element.attr('data-id'), "awtrix");
     });
 
 
@@ -36,6 +113,13 @@ $(document).ready(function () {
 
         id = $("#id").val();
 
+        convertIcon(id, "lametric");
+
+
+
+    });
+
+    function convertIcon(id, type) {
         var regex = new RegExp('^[0-9]+$');
 
         if (regex.test(id)) {
@@ -45,12 +129,9 @@ $(document).ready(function () {
 
             showMsg("Downloading...", "secondary");
 
-            body = {
-                reqType: "getIcon",
-                ID: id
-            };
             $.post("ajax.php", {
-                id: id
+                id: id,
+                type: type
             }, function (data, status) {
                 //console.log("Data: " + data + "\nType: " + typeof data + "\nLenght: " + data.length + "\nStatus: " + status);
                 //console.log("Data", data)
@@ -87,10 +168,7 @@ $(document).ready(function () {
         } else {
             showMsg("Invalid ID", "danger");
         }
-
-
-
-    });
+    }
 
     // preventing page from redirecting
     $("html").on("dragover", function (e) {
