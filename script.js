@@ -1,7 +1,10 @@
+var drawObj;
+
 $(document).ready(function () {
 
-    var animation;
     var icondb = [];
+
+    drawObj = new drawOnCanvas(new Array());
 
     var empty = new Array();
     for (var i = 0; i < 64; i++) {
@@ -33,6 +36,40 @@ $(document).ready(function () {
             //alert('Copy text command was ' + msg);
         } catch (err) {
             //alert('Unable to copy');
+        }
+    });
+
+    $("#frameCtrl").on("click", function (e) {
+        e.preventDefault();
+        if (drawObj == undefined) return;
+        var cmd = $(e.target).attr("data-cmd")
+        if (cmd != undefined) {
+            if (cmd == "prev") {
+                drawObj.playback(false);
+                drawObj.prevFrame();
+            } else if (cmd == "next") {
+                drawObj.playback(false);
+                drawObj.nextFrame();
+            }
+        } else if ($(e.target).hasClass("frameID")) {
+            drawObj.playback(false);
+            drawObj.setCurFrame($(e.target).attr("data-frame"));
+        }
+
+    });
+
+    $("#frameCmd, #playbackCmd").click(function (e) {
+        e.preventDefault();
+        if (drawObj == undefined) return;
+        var cmd = $(e.target).attr("data-cmd")
+        console.log("Frame Command: " + cmd);
+        switch (cmd) {
+            case "play":
+                drawObj.playback(true);
+                break;
+            case "pause":
+                drawObj.playback(false);
+                break;
         }
     });
 
@@ -154,7 +191,7 @@ $(document).ready(function () {
 
                 }
 
-                drawOnCanvas(framesRGB);
+                drawObj.setFrames(framesRGB);
                 setOutput(framesInt);
 
 
@@ -268,7 +305,7 @@ function uploadData(formdata) {
                 framesInt = new Array();
                 framesRGB[0] = convertData(response.rgb565);
                 framesInt[0] = response.rgb565;
-                drawOnCanvas(framesRGB);
+                drawObj.setFrames(framesRGB);
                 setOutput(framesInt);
             }
 
@@ -307,69 +344,127 @@ var convertData = function (data) {
     return dataConverted;
 }
 
+class drawOnCanvas {
+    #frames;
+    #animation;
+    #curFrame;
+    #play;
 
-var drawOnCanvas = function (frames) {
-
-    console.log("Frames: " + frames.length)
-
-    var curFrame = 0;
-
-    if (typeof animation !== 'undefined') {
-        clearInterval(animation);
+    constructor(frames) {
+        this.#curFrame = 0;
+        this.#animation = undefined;
+        this.#frames = new Array();
+        this.setFrames(frames);
+        this.#play = false;
     }
 
+    setFrames = function (frames) {
+        this.#frames = frames;
+        console.log("Frames: " + this.#frames.length);
 
-    function animate() {
+        if (typeof this.#animation !== 'undefined') {
+            clearInterval(this.#animation);
+        }
 
-        if (curFrame >= frames.length) curFrame = 0
-
-        draw(frames[curFrame++]);
-    }
-
-    function draw(frame) {
-
-        var canvas = document.getElementById('canvas');
-        var ctx = canvas.getContext('2d');
-        var canvasWidth = canvas.width;
-        var canvasHeight = canvas.height;
-        var i = 0;
-        size = canvasWidth / 8;
-
-        ctx.clearRect(0, 0, canvasWidth, canvasHeight); // clear canvas
-
-        var width = 8;
-        var height = 8;
-
-        for (var y = 0; y < height; y++) {
-            for (var x = 0; x < width; x++) {
-                color = frame[i++];
-                ctx.fillStyle = color;
-                ctx.fillRect(x * size, y * size, size, size);
-
-            }
+        if (this.#frames.length == 1) {
+            // Single Frame
+            draw(_frames[0]);
+            $("#animationinfo").hide();
+        } else {
+            // Animaton
+            this.playback(true);
+            this.animate();
+            this.#animation = setInterval(this.animate.bind(this), $("#tick").val());
+            $("#animationinfo").show();
+            $("#frames").val(this.#frames.length);
         }
 
     }
 
-    if (frames.length == 1) {
-        // Single Frame
-        draw(frames[0]);
-        $("#animationinfo").hide();
-    } else {
-        // Animaton
-        animate();
-        animation = setInterval(animate, $("#tick").val());
-        $("#animationinfo").show();
-        $("#frames").val(frames.length);
+    playback = function (play) {
+        if (play) {
+            this.#play = true;
+            $("#playbackCmd button").removeClass("active");
+            $("#playbackCmd button[data-cmd='play']").addClass("active");
+        } else {
+            this.#play = false;
+            $("#playbackCmd button").removeClass("active");
+            $("#playbackCmd button[data-cmd='pause']").addClass("active");
+        }
+    }
+
+
+    setCurFrame = function (idx) {
+        console.log("Set Frame: " + idx);
+        this.#curFrame = idx;
+        this.draw();
+    }
+
+    animate = function () {
+        if (this.#play) {
+            this.nextFrame();
+        }
+    }
+
+    nextFrame = function () {
+        this.#curFrame++;
+        if (this.#curFrame >= this.#frames.length) this.#curFrame = 0
+        this.draw();
+    }
+
+    prevFrame = function () {
+        this.#curFrame--;
+        if (this.#curFrame < 0) this.#curFrame = this.#frames.length - 1;
+        this.draw();
+    }
+
+    draw = function () {
+
+
+        if (this.#frames.length > 0) {
+
+            console.log("Draw Frame: " + this.#curFrame);
+
+            var frame = this.#frames[this.#curFrame];
+            var canvas = document.getElementById('canvas');
+            var ctx = canvas.getContext('2d');
+            var canvasWidth = canvas.width;
+            var canvasHeight = canvas.height;
+            var i = 0;
+            var size = canvasWidth / 8;
+
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight); // clear canvas
+
+            var width = 8;
+            var height = 8;
+
+            for (var y = 0; y < height; y++) {
+                for (var x = 0; x < width; x++) {
+                    var color = frame[i++];
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x * size, y * size, size, size);
+                }
+            }
+
+
+
+            $(".frameID").removeClass("active");
+            $(".frameID").eq(this.#curFrame).addClass("active");
+        }
+
     }
 
 }
 
 function setOutput(frames) {
 
+    // Remove frames from control
+    $("#frameCtrl .frameID").remove();
+
     var arrays = new Array();
-    frames.forEach(element => {
+    frames.forEach((element, index) => {
         arrays.push(JSON.stringify(element))
+        $('<button class="btn btn-outline-secondary frameID" data-frame="' + ((frames.length - index) - 1) + '">' + (frames.length - index) + '</button>').insertAfter("#frameCtrl button:first-child");
     });
 
     $("#output").val(arrays.join(","));
@@ -396,7 +491,7 @@ function RGB565IntArrayPaint(reduce = false) {
     matches = input.match(regex)
 
     if (matches.length == 1) {
-        drawOnCanvas(convertData(JSON.parse(matches[0])));
+        drawObj.setFrames(convertData(JSON.parse(matches[0])));
         setOutput(JSON.parse(matches[0]));
     } else {
         var framesRGB = new Array();
@@ -409,7 +504,7 @@ function RGB565IntArrayPaint(reduce = false) {
             }
             skip = !skip;
         });
-        drawOnCanvas(framesRGB);
+        drawObj.setFrames(framesRGB);
         setOutput(framesInt);
     }
 }
